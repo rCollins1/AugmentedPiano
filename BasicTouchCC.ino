@@ -61,6 +61,18 @@ int channel = 1;
 //int notesA[] = { 0,60,62,63,65,67,69,70,72, 0, 0, 0};
 int notesA[] = {60,61,62,63,64,65,66,67,68,69,70,71};
 
+// For octave selection
+unsigned int octave = 0;
+// Preset array with MIDI values corresponding to each octave
+int octaves[8][12] = {{24,25,26,27,28,29,30,31,32,33,34,35},
+                      {36,37,38,39,40,41,42,43,44,45,46,47},
+                      {48,49,50,51,52,53,54,55,56,57,58,59},
+                      {60,61,62,63,64,65,66,67,68,69,70,71},
+                      {72,73,74,75,76,77,78,79,80,81,82,83},
+                      {84,85,86,87,88,89,90,91,92,93,94,95},
+                      {96,97,98,99,100,101,102,103,104,105,106,107},
+                      {108,109,110,111,112,113,114,115,116,117,118,119}};
+
 // Some common scale intervals
 //dorian       = "2,1,2,2,2,1,2"
 //phrygian     = "1,2,2,2,1,2,2"
@@ -94,18 +106,19 @@ void loop() {
   // Get the currently touched pads
   currstateA = capA.touched();
 
+  // Check Octave 
+  checkOctave();
   // Check the state of the cap-touch board and turn on/off notes as needed
   checkCap();
 
   // Only check the control changes 20 times a second so we dont overload
   // the MIDI-bus with too many messages
-  if(timer > 50){
+  if(timer > 50){    
     // Check Pot
-    checkCCpot();
+    //checkCCpot();
 
     // Check Cap
     checkCCcap();
-
     timer = 0;
   }
   
@@ -128,12 +141,12 @@ void checkCap(){
 //        usbMIDI.sendNoteOn(notesA[n],vel,2); 
       // I have set it (below) so that pin 0 controls the volume of all the other keys
         usbMIDI.sendNoteOn(notesA[n],currcap,2);
-        Serial.println(notesA[n]);
+//        Serial.println(notesA[n]);
       // otherwise it must have changed and is FALSE, so turn off that note
       } else {
         // Send out a MIDI message on both usbMIDI and hardware MIDI ports
         usbMIDI.sendNoteOff(notesA[n],0,2); 
-        Serial.println(notesA[n]);
+//        Serial.println(notesA[n]);
 //        Serial.print("new stuff ");
 //        Serial.println(pot1);
       }
@@ -159,6 +172,17 @@ void checkCCcap(){
   prevcap = currcap;
 }
 
+void checkOctave() {
+  currPotValue = analogRead(pot1);
+  //float voltage = currPotValue * (5.0 / 1023.0);
+  
+  if(currPotValue != prevPotValue){
+    octave = (currPotValue/*0-1023*/ / 128);
+    // Print the first value of the selected octave array
+    Serial.println(octaves[octave][0]);
+    memcpy(notesA, octaves[octave], sizeof(notesA));
+  }
+}
 
 /*********************************************************
 This is a library for the MPR121 12-channel Capacitive touch sensor
