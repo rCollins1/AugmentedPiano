@@ -5,7 +5,7 @@
 // Make sure to program your Teensy 3.2 in MIDI mode
 
 // You need to include two libraries:
-// the I2C "Wire.h" library, 
+// the I2C "Wire.h" library,
 // the Adafruit MPR121 Cap-touch Board "Adafruit_MPR121.h" library
 
 #include <Wire.h>
@@ -17,12 +17,18 @@
 // Create the cap-touch board variables
 // You can have up to 4 boards on one I2C bus (because there are 4 different board addresses)
 Adafruit_MPR121 capA = Adafruit_MPR121();
+Adafruit_MPR121 capC = Adafruit_MPR121();
+Adafruit_MPR121 capD = Adafruit_MPR121();
 
 // use unsigned integers in binary format to represent the state of touched pins
 
 // current and previous state of the system
 uint16_t currstateA = 0;
 uint16_t prevstateA = 0;
+uint16_t currstateC = 0;
+uint16_t prevstateC = 0;
+uint16_t currstateD = 0;
+uint16_t prevstateD = 0;
 
 // Create variables for the pressure sesnsing pad
 uint16_t currcap = 0;
@@ -60,18 +66,29 @@ int channel = 1;
               // 0, 1, 2, 3, 4, 5, 6, 7, 8, 9,10,11
 //int notesA[] = { 0,60,62,63,65,67,69,70,72, 0, 0, 0};
 int notesA[] = {60,61,62,63,64,65,66,67,68,69,70,71};
+int notesC[] = {72,73,74,75,76,77,78,79,80,81,82,83};
+int notesD[] = {84,85,86,87,88,89,90,91,92,93,94,95};
 
 // For octave selection
+//unsigned int octave = 0;
+//// Preset array with MIDI values corresponding to each octave
+//int octaves[8][12] = {{24,25,26,27,28,29,30,31,32,33,34,35},
+//                      {36,37,38,39,40,41,42,43,44,45,46,47},
+//                      {48,49,50,51,52,53,54,55,56,57,58,59},
+//                      {60,61,62,63,64,65,66,67,68,69,70,71},
+//                      {72,73,74,75,76,77,78,79,80,81,82,83},
+//                      {84,85,86,87,88,89,90,91,92,93,94,95},
+//                      {96,97,98,99,100,101,102,103,104,105,106,107},
+//                      {108,109,110,111,112,113,114,115,116,117,118,119}};
+
 unsigned int octave = 0;
 // Preset array with MIDI values corresponding to each octave
-int octaves[8][12] = {{24,25,26,27,28,29,30,31,32,33,34,35},
-                      {36,37,38,39,40,41,42,43,44,45,46,47},
-                      {48,49,50,51,52,53,54,55,56,57,58,59},
-                      {60,61,62,63,64,65,66,67,68,69,70,71},
-                      {72,73,74,75,76,77,78,79,80,81,82,83},
-                      {84,85,86,87,88,89,90,91,92,93,94,95},
-                      {96,97,98,99,100,101,102,103,104,105,106,107},
-                      {108,109,110,111,112,113,114,115,116,117,118,119}};
+int octaves[15][12] = {{24,25,26,27,28,29,30,31,32,33,34,35}, {36,37,38,39,40,41,42,43,44,45,46,47}, {48,49,50,51,52,53,54,55,56,57,58,59},
+                      {36,37,38,39,40,41,42,43,44,45,46,47}, {48,49,50,51,52,53,54,55,56,57,58,59}, {60,61,62,63,64,65,66,67,68,69,70,71},
+                      {48,49,50,51,52,53,54,55,56,57,58,59}, {60,61,62,63,64,65,66,67,68,69,70,71}, {72,73,74,75,76,77,78,79,80,81,82,83},
+                      {60,61,62,63,64,65,66,67,68,69,70,71}, {72,73,74,75,76,77,78,79,80,81,82,83}, {84,85,86,87,88,89,90,91,92,93,94,95},
+                      {72,73,74,75,76,77,78,79,80,81,82,83}, {84,85,86,87,88,89,90,91,92,93,94,95}, {96,97,98,99,100,101,102,103,104,105,106,107}};
+                      
 
 // Some common scale intervals
 //dorian       = "2,1,2,2,2,1,2"
@@ -95,9 +112,22 @@ void setup() {
   // start the "A" cap-touch board - 0x5A is the I2C address
   capA.begin(0x5A);
   if (!capA.begin(0x5A)) {
-    Serial.println("MPR121 not found, check wiring?");
+    Serial.println("MPR121 A not found, check wiring?");
     while (1);
   }
+  Serial.println("MPR121 A found!");
+  capC.begin(0x5C);
+  if (!capC.begin(0x5C)) {
+    Serial.println("MPR121 C not found, check wiring?");
+    while (1);
+  }
+  Serial.println("MPR121 C found!");
+  capD.begin(0x5D);
+  if (!capD.begin(0x5D)) {
+    Serial.println("MPR121 D not found, check wiring?");
+    while (1);
+  }
+  Serial.println("MPR121 D found!");
 }
 
 // the main loop
@@ -105,6 +135,8 @@ void loop() {
 
   // Get the currently touched pads
   currstateA = capA.touched();
+  currstateC = capC.touched();
+  currstateD = capD.touched();
 
   // Check Octave 
   checkOctave();
@@ -113,7 +145,7 @@ void loop() {
 
   // Only check the control changes 20 times a second so we dont overload
   // the MIDI-bus with too many messages
-  if(timer > 50){    
+  if(timer > 20){    
     // Check Pot
     //checkCCpot();
 
@@ -124,6 +156,8 @@ void loop() {
   
   // Update our state
   prevstateA = currstateA;
+  prevstateC = currstateC;
+  prevstateD = currstateD;
 }
 
 // Function to check the cap-touch board and send turn on/off notes as needed
@@ -138,15 +172,51 @@ void checkCap(){
       // If it has changed and is TRUE, then turn on that note
       if(bitRead(currstateA,n)){
         // Send out a MIDI message on both usbMIDI and hardware MIDI ports
-//        usbMIDI.sendNoteOn(notesA[n],vel,2); 
+        usbMIDI.sendNoteOn(notesA[n],vel,2); 
       // I have set it (below) so that pin 0 controls the volume of all the other keys
-        usbMIDI.sendNoteOn(notesA[n],currcap,2);
-//        Serial.println(notesA[n]);
+//        usbMIDI.sendNoteOn(notesA[n],currcap,2);
+        Serial.println(notesA[n]);
       // otherwise it must have changed and is FALSE, so turn off that note
       } else {
         // Send out a MIDI message on both usbMIDI and hardware MIDI ports
         usbMIDI.sendNoteOff(notesA[n],0,2); 
 //        Serial.println(notesA[n]);
+//        Serial.print("new stuff ");
+//        Serial.println(pot1);
+      }
+    }
+    if(bitRead(currstateC,n) != bitRead(prevstateC,n)){
+      
+      // If it has changed and is TRUE, then turn on that note
+      if(bitRead(currstateC,n)){
+        // Send out a MIDI message on both usbMIDI and hardware MIDI ports
+        usbMIDI.sendNoteOn(notesC[n],vel,2); 
+      // I have set it (below) so that pin 0 controls the volume of all the other keys
+//        usbMIDI.sendNoteOn(notesC[n],currcap,2);
+        Serial.println(notesC[n]);
+      // otherwise it must have changed and is FALSE, so turn off that note
+      } else {
+        // Send out a MIDI message on both usbMIDI and hardware MIDI ports
+        usbMIDI.sendNoteOff(notesC[n],0,2); 
+//        Serial.println(notesC[n]);
+//        Serial.print("new stuff ");
+//        Serial.println(pot1);
+      }
+    }
+    if(bitRead(currstateD,n) != bitRead(prevstateD,n)){
+      
+      // If it has changed and is TRUE, then turn on that note
+      if(bitRead(currstateD,n)){
+        // Send out a MIDI message on both usbMIDI and hardware MIDI ports
+        usbMIDI.sendNoteOn(notesD[n],vel,2); 
+      // I have set it (below) so that pin 0 controls the volume of all the other keys
+//        usbMIDI.sendNoteOn(notesD[n],currcap,2);
+        Serial.println(notesD[n]);
+      // otherwise it must have changed and is FALSE, so turn off that note
+      } else {
+        // Send out a MIDI message on both usbMIDI and hardware MIDI ports
+        usbMIDI.sendNoteOff(notesD[n],0,2); 
+//        Serial.println(notesD[n]);
 //        Serial.print("new stuff ");
 //        Serial.println(pot1);
       }
@@ -165,6 +235,9 @@ void checkCCpot() {
 
 void checkCCcap(){
   currcap = constrain(map(capA.filteredData(0), 40, 130, 120, 30), 30, 120);
+  currcap = constrain(map(capC.filteredData(0), 40, 130, 120, 30), 30, 120);
+  currcap = constrain(map(capD.filteredData(0), 40, 130, 120, 30), 30, 120);
+  
 //  Serial.println(capA.filteredData(0));
   if(currcap != prevcap){
     usbMIDI.sendControlChange(CCcap,currcap,channel);
@@ -174,15 +247,39 @@ void checkCCcap(){
 
 void checkOctave() {
   currPotValue = analogRead(pot1);
-  //float voltage = currPotValue * (5.0 / 1023.0);
+  //linear = log(currPotValue) / log(1000) * 1023;
   
   if(currPotValue != prevPotValue){
+    //octave = log(currPotValue
     octave = (currPotValue/*0-1023*/ / 128);
     // Print the first value of the selected octave array
-    Serial.println(octaves[octave][0]);
-    memcpy(notesA, octaves[octave], sizeof(notesA));
+    if (currPotValue < 14)
+    {
+      octave = 0;
+    } else if (currPotValue < 490)
+    {
+      octave = 1;
+    } else if (currPotValue < 840)
+    {
+      octave = 2;
+    } else if (currPotValue < 900)
+    {
+      octave = 3;
+    } else if (currPotValue < 960)
+    {
+      octave = 4;
+    } else
+    {
+      //octave = 5;
+    }
+    Serial.println(octave);
+    memcpy(notesA, octaves[octave*3], sizeof(notesA));
+    memcpy(notesC, octaves[octave*3 + 1], sizeof(notesC));
+    memcpy(notesD, octaves[octave*3 + 2], sizeof(notesD));
   }
 }
+
+
 
 /*********************************************************
 This is a library for the MPR121 12-channel Capacitive touch sensor
