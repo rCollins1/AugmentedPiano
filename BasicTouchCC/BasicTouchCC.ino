@@ -17,6 +17,7 @@
 // Create the cap-touch board variables
 // You can have up to 4 boards on one I2C bus (because there are 4 different board addresses)
 Adafruit_MPR121 capA = Adafruit_MPR121();
+//Adafruit_MPR121 capB = Adafruit_MPR121();
 Adafruit_MPR121 capC = Adafruit_MPR121();
 Adafruit_MPR121 capD = Adafruit_MPR121();
 
@@ -25,6 +26,8 @@ Adafruit_MPR121 capD = Adafruit_MPR121();
 // current and previous state of the system
 uint16_t currstateA = 0;
 uint16_t prevstateA = 0;
+//uint16_t currstateB = 0;
+//uint16_t prevstateB = 0;
 uint16_t currstateC = 0;
 uint16_t prevstateC = 0;
 uint16_t currstateD = 0;
@@ -35,6 +38,17 @@ uint16_t currcap = 0;
 uint16_t prevcap = 0;
 
 elapsedMillis timer = 0;
+
+
+// chord selection vars
+const int led1Pin = 3;
+const int led2Pin = 5;
+const int led3Pin = 7;
+const int led4Pin = 9;
+const int record1 = 2;
+const int record2 = 4;
+const int record3 = 6;
+const int record4 = 8;
 
 /*
 touchedA is a 16 bit unsigned integers, with the state of the 12 pins of 
@@ -109,6 +123,16 @@ int CCcap = 91; // Send CC values from the capacitor on CC channel 91
 
 // Setup loop that intitiates the I2C hardware and the hardware MIDI
 void setup() {
+
+//  pinMode(record1, INPUT);
+//  pinMode(led1Pin, OUTPUT);
+//  pinMode(record2, INPUT);
+//  pinMode(led2Pin, OUTPUT);
+//  pinMode(record3, INPUT);
+//  pinMode(led3Pin, OUTPUT);
+//  pinMode(record4, INPUT);
+//  pinMode(led4Pin, OUTPUT);
+  
   // start the "A" cap-touch board - 0x5A is the I2C address
   capA.begin(0x5A);
   if (!capA.begin(0x5A)) {
@@ -116,6 +140,12 @@ void setup() {
     while (1);
   }
   Serial.println("MPR121 A found!");
+//  capB.begin(0x5B);
+//  if (!capC.begin(0x5B)) {
+//    Serial.println("MPR121 B not found, check wiring?");
+//    while (1);
+//  }
+//  Serial.println("MPR121 B found!");
   capC.begin(0x5C);
   if (!capC.begin(0x5C)) {
     Serial.println("MPR121 C not found, check wiring?");
@@ -132,9 +162,15 @@ void setup() {
 
 // the main loop
 void loop() {
+//  checkButton1();
+//  checkButton2();
+//  checkButton3();
+//  checkButton4();
+  
 
   // Get the currently touched pads
   currstateA = capA.touched();
+//  currstateB = capB.touched();
   currstateC = capC.touched();
   currstateD = capD.touched();
 
@@ -235,6 +271,7 @@ void checkCCpot() {
 
 void checkCCcap(){
   currcap = constrain(map(capA.filteredData(0), 40, 130, 120, 30), 30, 120);
+//  currcap = constrain(map(capB.filteredData(0), 40, 130, 120, 30), 30, 120);
   currcap = constrain(map(capC.filteredData(0), 40, 130, 120, 30), 30, 120);
   currcap = constrain(map(capD.filteredData(0), 40, 130, 120, 30), 30, 120);
   
@@ -278,6 +315,79 @@ void checkOctave() {
     memcpy(notesD, octaves[octave*3 + 2], sizeof(notesD));
   }
 }
+
+//void checkButton1() {
+//    // User pressed chord1 record button
+//    if (digitalRead(record1) == HIGH) {
+//        // Wait for user to release record button
+//        while (digitalRead(record1) == HIGH) {}
+//        //Change state of the record button after the user releases
+//        // if button has been switched to on, turn off all other record buttons and turn led on 
+//        digitalWrite(led1Pin, HIGH);
+//        // Until user turns off record button
+//        while (digitalRead(record1) == LOW) {
+//            //Record notes that are pressed and save to chord1
+//        }
+//        // Wait for user to release record button
+//        while (digitalRead(record1) == HIGH) {}
+//        digitalWrite(led1Pin, LOW);
+//        }
+//    }
+//
+//void checkButton2() {
+//    // User pressed chord2 record button
+//    if (digitalRead(record2) == HIGH) {
+//        // Wait for user to release record button
+//        while (digitalRead(record2) == HIGH) {}
+//        //Change state of the record button after the user releases
+//        // if button has been switched to on, turn off all other record buttons and turn led on 
+//        digitalWrite(led2Pin, HIGH);
+//        // Until user turns off record button
+//        while (digitalRead(record2) == LOW) {
+//            //Record notes that are pressed and save to chord1
+//        }
+//        // Wait for user to release record button
+//        while (digitalRead(record2) == HIGH) {}
+//        digitalWrite(led2Pin, LOW);
+//        }
+//    }
+//
+//void checkButton3() {
+//    // User pressed chord3 record button
+//    if (digitalRead(record3) == HIGH) {
+//        // Wait for user to release record button
+//        while (digitalRead(record3) == HIGH) {}
+//        //Change state of the record button after the user releases
+//        // if button has been switched to on, turn off all other record buttons and turn led on 
+//        digitalWrite(led3Pin, HIGH);
+//        // Until user turns off record button
+//        while (digitalRead(record3) == LOW) {
+//            //Record notes that are pressed and save to chord1
+//        }
+//        // Wait for user to release record button
+//        while (digitalRead(record3) == HIGH) {}
+//        digitalWrite(led3Pin, LOW);
+//        }
+//    }
+//
+//void checkButton4() {
+//    // User pressed chord4 record button
+//    if (digitalRead(record4) == HIGH) {
+//        // Wait for user to release record button
+//        while (digitalRead(record4) == HIGH) {}
+//        //Change state of the record button after the user releases
+//        // if button has been switched to on, turn off all other record buttons and turn led on 
+//        digitalWrite(led4Pin, HIGH);
+//        // Until user turns off record button
+//        while (digitalRead(record4) == LOW) {
+//            //Record notes that are pressed and save to chord1
+//        }
+//        // Wait for user to release record button
+//        while (digitalRead(record4) == HIGH) {}
+//        digitalWrite(led4Pin, LOW);
+//        }
+//    }
+
 
 
 
