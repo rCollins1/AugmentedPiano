@@ -83,19 +83,8 @@ int notesA[] = {60,61,62,63,64,65,66,67,68,69,70,71};
 int notesC[] = {72,73,74,75,76,77,78,79,80,81,82,83};
 int notesD[] = {84,85,86,87,88,89,90,91,92,93,94,95};
 
-// For octave selection
-//unsigned int octave = 0;
-//// Preset array with MIDI values corresponding to each octave
-//int octaves[8][12] = {{24,25,26,27,28,29,30,31,32,33,34,35},
-//                      {36,37,38,39,40,41,42,43,44,45,46,47},
-//                      {48,49,50,51,52,53,54,55,56,57,58,59},
-//                      {60,61,62,63,64,65,66,67,68,69,70,71},
-//                      {72,73,74,75,76,77,78,79,80,81,82,83},
-//                      {84,85,86,87,88,89,90,91,92,93,94,95},
-//                      {96,97,98,99,100,101,102,103,104,105,106,107},
-//                      {108,109,110,111,112,113,114,115,116,117,118,119}};
-
 unsigned int octave = 0;
+unsigned int prevOctave = 0;
 // Preset array with MIDI values corresponding to each octave
 int octaves[15][12] = {{24,25,26,27,28,29,30,31,32,33,34,35}, {36,37,38,39,40,41,42,43,44,45,46,47}, {48,49,50,51,52,53,54,55,56,57,58,59},
                       {36,37,38,39,40,41,42,43,44,45,46,47}, {48,49,50,51,52,53,54,55,56,57,58,59}, {60,61,62,63,64,65,66,67,68,69,70,71},
@@ -160,7 +149,7 @@ void setup() {
   Serial.println("MPR121 C (SCL) found!");
 }
 
-// the main loop
+// ====================== MAIN LOOP ================================
 void loop() {
   delay(500);
 //  Serial.print(digitalRead(record1));
@@ -211,6 +200,8 @@ void checkCap(){
   for(int n = 1; n <12; n++){
     // Compare the current state to the previous state
     // If it has changed you need to do something
+
+    // ============= CHECKING CAP A ===================================
     if(bitRead(currstateA,n) != bitRead(prevstateA,n)){
       
       // If it has changed and is TRUE, then turn on that note
@@ -249,6 +240,8 @@ void checkCap(){
 ////        Serial.println(pot1);
 //      }
 //    }
+
+    // ============= CHECKING CAP C ===================================
     if(bitRead(currstateC,n) != bitRead(prevstateC,n)){
       Serial.println("HERE D");
       
@@ -268,6 +261,8 @@ void checkCap(){
 //        Serial.println(pot1);
       }
     }
+
+    // ============= CHECKING CAP D ===================================
     if(bitRead(currstateD,n) != bitRead(prevstateD,n)){
       
       // If it has changed and is TRUE, then turn on that note
@@ -290,6 +285,8 @@ void checkCap(){
   }
 }
 
+
+// ============================ HELPER FUNCTIONS ============================
 void checkCCpot() {
   currPotValue = analogRead(pot1)/8; // Read the pin and divide by 8 to get a value from (0-127)
   // Check if the Potentiometer value has changed, and send a new CC message if it has
@@ -315,34 +312,28 @@ void checkCCcap(){
 void checkOctave() {
   currPotValue = analogRead(pot1);
   //linear = log(currPotValue) / log(1000) * 1023;
-  
-  if(currPotValue != prevPotValue){
-    //octave = log(currPotValue
-    octave = (currPotValue/*0-1023*/ / 128);
-    // Print the first value of the selected octave array
-    if (currPotValue < 14)
-    {
-      octave = 0;
-    } else if (currPotValue < 490)
-    {
-      octave = 1;
-    } else if (currPotValue < 840)
-    {
-      octave = 2;
-    } else if (currPotValue < 900)
-    {
-      octave = 3;
-    } else if (currPotValue < 960)
-    {
-      octave = 4;
-    } else
-    {
-      //octave = 5;
-    }
-//  Serial.println(octave);
+  // Print the first value of the selected octave array
+  if (currPotValue < 75)
+  {
+    octave = 0;
+  } else if (currPotValue < 150)
+  {
+    octave = 1;
+  } else if (currPotValue < 300)
+  {
+    octave = 2;
+  } else if (currPotValue < 980)
+  {
+    octave = 3;
+  } else // currPotValue > 980
+  {
+    octave = 4;
+  }
+  if(octave != prevOctave){
     memcpy(notesA, octaves[octave*3], sizeof(notesA));
     memcpy(notesC, octaves[octave*3 + 1], sizeof(notesC));
     memcpy(notesD, octaves[octave*3 + 2], sizeof(notesD));
+    prevOctave = octave;
   }
 }
 
