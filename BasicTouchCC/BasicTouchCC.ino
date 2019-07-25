@@ -75,9 +75,7 @@ int channel = 1;
 // these are identifed using the standard MIDI note numbers
 // Middle C is note 60
 
-// We only have 7 touch pads...we also don't use pin 0, so start at pin 1
 // These correspond to pins:
-// 0, 1, 2, 3, 4, 5, 6, 7, 8, 9,10,11
 //int notesA[] = { 0,60,62,63,65,67,69,70,72, 0, 0, 0};
 int notesA[] = {60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71};
 int chords[4][36];
@@ -196,8 +194,7 @@ void loop() {
 // Function to check the cap-touch board and send turn on/off notes as needed
 void checkCap(int recording) {
   // Loop through the 12 touch points on the board
-  // We use pin 0 for cap touch CC later, so skip that one and start at n = 1
-  for (int n = 1; n < 12; n++) {
+  for (int n = 0; n < 12; n++) {
     // Compare the current state to the previous state
     // If it has changed you need to do something
 
